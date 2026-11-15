@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Button from "./components/Button.jsx";
 import DropZone from "./components/DropZone.jsx";
+import History from "./components/History.jsx";
 import JobDescriptionInput from "./components/JobDescriptionInput.jsx";
 import ScoreCard from "./components/ScoreCard.jsx";
 import ThemeToggle from "./components/ThemeToggle.jsx";
@@ -85,6 +86,11 @@ export default function App() {
             <ScoreCard result={SAMPLE_RESULT} />
           </section>
         )}
+
+        <section className="space-y-4">
+          <p className="font-display text-lg font-semibold">Recent runs</p>
+          <History />
+        </section>
       </div>
     </main>
   );

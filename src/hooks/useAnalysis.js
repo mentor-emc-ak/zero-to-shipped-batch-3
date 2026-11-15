@@ -1,22 +1,40 @@
 import { useCallback, useState } from "react";
 import { extractText } from "../lib/extractText.js";
 import { scoreResume } from "../lib/scoreResume.js";
+import { requestFitReport } from "../lib/fitReport.js";
 
 // Custom hook: owns the status of one analysis run (idle, loading, done, error).
 // Components call `run(file, jobDescription)` and read the state; they never touch the parsing code.
+// The local scorecard is always produced; the server's written report is an extra that can fail alone.
 export function useAnalysis() {
-  const [state, setState] = useState({ status: "idle", result: null, error: "" });
+  const [state, setState] = useState({
+    status: "idle",
+    result: null,
+    error: "",
+    report: null,
+    reportError: "",
+    reportLoading: false,
+  });
 
   const run = useCallback(async (file, jobDescription) => {
-    setState({ status: "loading", result: null, error: "" });
+    setState({ status: "loading", result: null, error: "", report: null, reportError: "", reportLoading: false });
+    let text;
     try {
-      const text = await extractText(file);
+      text = await extractText(file);
       if (!text.trim()) {
         throw new Error("No text found. Is the PDF a scanned image?");
       }
-      setState({ status: "done", result: scoreResume(text, jobDescription), error: "" });
+      setState((s) => ({ ...s, status: "done", result: scoreResume(text, jobDescription), reportLoading: true }));
     } catch (err) {
-      setState({ status: "error", result: null, error: err.message });
+      setState((s) => ({ ...s, status: "error", result: null, error: err.message }));
+      return;
+    }
+
+    try {
+      const { report } = await requestFitReport(text, jobDescription);
+      setState((s) => ({ ...s, report, reportLoading: false }));
+    } catch (err) {
+      setState((s) => ({ ...s, reportError: err.message, reportLoading: false }));
     }
   }, []);
 

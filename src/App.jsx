@@ -13,7 +13,7 @@ export default function App() {
   const [file, setFile] = useState(null);
   const [jobDescription, setJobDescription] = useState("");
   const [inputError, setInputError] = useState("");
-  const { status, result, error, isLoading, run } = useAnalysis();
+  const { status, result, error, isLoading, run, report, reportError, reportLoading } = useAnalysis();
   const { theme, toggle } = useTheme();
 
   // Check the inputs first, then hand the work to the hook.
@@ -63,7 +63,17 @@ export default function App() {
         </section>
 
         {status === "done" && result ? (
-          <ScoreCard result={result} />
+          <>
+            <ScoreCard result={result} />
+            <section className="space-y-4">
+              <p className="font-display text-lg font-semibold">Written fit report</p>
+              {reportLoading && <p className="text-muted">Writing your report…</p>}
+              {reportError && <p className="text-accent-ink">{reportError}</p>}
+              {report && (
+                <pre className="whitespace-pre-wrap font-sans leading-relaxed text-ink">{report}</pre>
+              )}
+            </section>
+          </>
         ) : (
           <section className="space-y-4">
             <div className="text-center space-y-1">

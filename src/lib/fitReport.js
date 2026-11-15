@@ -1,0 +1,16 @@
+// Ask the Express server for a written fit report. The server holds the labd key;
+// the browser only sends the resume text and job description.
+// Resolves to { report, savedTo, percentLeft }; throws an Error with a readable message otherwise.
+export async function requestFitReport(resumeText, jobDescription) {
+  const res = await fetch("/api/fit-report", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ resume: resumeText, jobDescription }),
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.error || `The report server returned ${res.status}.`);
+  }
+  return data;
+}

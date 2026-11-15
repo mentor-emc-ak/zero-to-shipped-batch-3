@@ -9,7 +9,10 @@ export default defineConfig({
   // never talks to labd directly and no CORS setup is needed.
   server: {
     proxy: {
-      "/api": "http://localhost:3001",
+      "/api": {
+        target: "https://zero-to-shipped-3-server.vercel.app",
+        changeOrigin: true,
+      },
     },
   },
 });

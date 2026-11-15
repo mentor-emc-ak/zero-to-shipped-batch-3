@@ -14,6 +14,7 @@ export default function App() {
   const [file, setFile] = useState(null);
   const [jobDescription, setJobDescription] = useState("");
   const [inputError, setInputError] = useState("");
+  const [showExample, setShowExample] = useState(false);
   const { status, result, error, isLoading, run, report, reportError, reportLoading } = useAnalysis();
   const { theme, toggle } = useTheme();
 
@@ -47,49 +48,71 @@ export default function App() {
           </p>
         </header>
 
-        <section className="grid gap-10 md:grid-cols-2">
-          <div className="space-y-3">
-            <p className="font-display text-lg font-semibold">1. Your resume</p>
-            <DropZone file={file} onFile={setFile} />
+        <section className="grid gap-10 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:items-start">
+          {/* Left: the inputs */}
+          <div className="space-y-10">
+            <div className="space-y-3">
+              <p className="font-display text-lg font-semibold">1. Your resume</p>
+              <DropZone file={file} onFile={setFile} />
+            </div>
+
+            <JobDescriptionInput value={jobDescription} onChange={setJobDescription} />
+
+            <div className="flex flex-col items-start gap-3">
+              <Button onClick={handleCompare} loading={isLoading}>
+                Compare resume to job
+              </Button>
+              <p className="text-sm text-accent-ink min-h-[1.25rem]">{message}</p>
+            </div>
           </div>
 
-          <JobDescriptionInput value={jobDescription} onChange={setJobDescription} />
+          {/* Right: the results. Nothing is shown here until a run starts or the example is requested. */}
+          <div className="space-y-6 md:sticky md:top-8">
+            <p className="font-display text-lg font-semibold">2. Your results</p>
 
-          <div className="md:col-span-2 flex flex-col items-start gap-3">
-            <Button onClick={handleCompare} loading={isLoading}>
-              Compare resume to job
-            </Button>
-            <p className="text-sm text-accent-ink min-h-[1.25rem]">{message}</p>
+            {status === "loading" && (
+              <p className="text-muted">Reading your resume and scoring it…</p>
+            )}
+
+            {status === "done" && result && (
+              <>
+                <ScoreCard result={result} />
+                <div className="space-y-3 border-t-2 border-ink pt-6">
+                  <p className="font-display text-lg font-semibold">Written fit report</p>
+                  {reportLoading && <p className="text-muted">Writing your report…</p>}
+                  {reportError && <p className="text-accent-ink">{reportError}</p>}
+                  {report && (
+                    <pre className="whitespace-pre-wrap font-sans leading-relaxed text-ink">{report}</pre>
+                  )}
+                </div>
+              </>
+            )}
+
+            {status !== "loading" && status !== "done" && !showExample && (
+              <p className="text-muted">Add your resume and a job description, then compare them to see your scorecard here.</p>
+            )}
+
+            {status !== "done" && showExample && (
+              <div className="space-y-6">
+                <div className="space-y-1">
+                  <p className="text-sm uppercase tracking-widest text-accent">Example report</p>
+                  <p className="text-sm text-muted">This is a sample, not a real resume.</p>
+                </div>
+                <ScoreCard result={SAMPLE_RESULT} />
+              </div>
+            )}
+
+            {status !== "loading" && status !== "done" && (
+              <Button onClick={() => setShowExample((on) => !on)}>
+                {showExample ? "Hide example report" : "Show an example report"}
+              </Button>
+            )}
           </div>
         </section>
 
-        {status === "done" && result ? (
-          <>
-            <ScoreCard result={result} />
-            <section className="space-y-4">
-              <p className="font-display text-lg font-semibold">Written fit report</p>
-              {reportLoading && <p className="text-muted">Writing your report…</p>}
-              {reportError && <p className="text-accent-ink">{reportError}</p>}
-              {report && (
-                <pre className="whitespace-pre-wrap font-sans leading-relaxed text-ink">{report}</pre>
-              )}
-            </section>
-          </>
-        ) : (
-          <section className="space-y-4">
-            <div className="text-center space-y-1">
-              <p className="text-sm uppercase tracking-widest text-accent">Example results</p>
-              <p className="text-sm text-muted">
-                This is a sample, not your resume. Upload yours above to see your own scorecard.
-              </p>
-            </div>
-            <ScoreCard result={SAMPLE_RESULT} />
-          </section>
-        )}
-
         <section className="space-y-4">
           <p className="font-display text-lg font-semibold">Recent runs</p>
-          <History />
+          <History refreshKey={report} />
         </section>
       </div>
     </main>

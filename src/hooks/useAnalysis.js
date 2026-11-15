@@ -19,19 +19,21 @@ export function useAnalysis() {
   const run = useCallback(async (file, jobDescription) => {
     setState({ status: "loading", result: null, error: "", report: null, reportError: "", reportLoading: false });
     let text;
+    let result;
     try {
       text = await extractText(file);
       if (!text.trim()) {
         throw new Error("No text found. Is the PDF a scanned image?");
       }
-      setState((s) => ({ ...s, status: "done", result: scoreResume(text, jobDescription), reportLoading: true }));
+      result = scoreResume(text, jobDescription);
+      setState((s) => ({ ...s, status: "done", result, reportLoading: true }));
     } catch (err) {
       setState((s) => ({ ...s, status: "error", result: null, error: err.message }));
       return;
     }
 
     try {
-      const { report } = await requestFitReport(text, jobDescription);
+      const { report } = await requestFitReport(text, jobDescription, result);
       setState((s) => ({ ...s, report, reportLoading: false }));
     } catch (err) {
       setState((s) => ({ ...s, reportError: err.message, reportLoading: false }));

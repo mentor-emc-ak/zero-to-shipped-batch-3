@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { fetchFitHistory } from "../lib/fitReport.js";
 
-// Lists earlier saved runs, newest first. Loads once when the page opens.
-// Each row shows the score and the counts; the feedback text stays out of the list.
-export default function History() {
+// Lists earlier saved runs in a table, newest first. Reloads whenever `refreshKey` changes,
+// so a new run appears once the server has saved it.
+// Only scores and counts are shown; the written report stays out of the table.
+export default function History({ refreshKey }) {
   const [reports, setReports] = useState([]);
   const [status, setStatus] = useState("loading");
   const [error, setError] = useState("");
@@ -26,30 +27,44 @@ export default function History() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [refreshKey]);
 
   if (status === "loading") return <p className="text-muted">Loading your history…</p>;
   if (status === "error") return <p className="text-accent-ink">{error}</p>;
-  if (reports.length === 0) return <p className="text-muted">No saved runs yet.</p>;
+  if (reports.length === 0) return <p className="text-muted">No saved runs yet. Your runs will appear here.</p>;
 
   return (
-    <ul className="divide-y divide-ink border-t border-ink">
-      {reports.map((r) => (
-        <li key={r._id} className="py-4 grid gap-2 md:grid-cols-[auto_1fr_auto] md:items-baseline md:gap-6">
-          <span className="font-display text-3xl font-bold text-accent-ink">{r.overallScore}</span>
-          <div className="text-sm text-muted space-y-1">
-            <p>
-              Keyword {r.breakdown.match} · Structure {r.breakdown.structure} · Impact {r.breakdown.impact}
-            </p>
-            <p>
-              {r.matchedTerms.length} matched · {r.missingTerms.length} missing · {r.weaknesses.length} changes to make
-            </p>
-          </div>
-          <time className="text-sm text-muted" dateTime={r.createdAt}>
-            {new Date(r.createdAt).toLocaleString()}
-          </time>
-        </li>
-      ))}
-    </ul>
+    <div className="overflow-x-auto border-t-2 border-ink">
+      <table className="w-full text-left text-sm">
+        <thead className="border-b-2 border-ink font-display uppercase tracking-wider text-muted">
+          <tr>
+            <th className="py-3 pr-4 font-semibold">Date</th>
+            <th className="py-3 pr-4 font-semibold">Overall</th>
+            <th className="py-3 pr-4 font-semibold">Keyword</th>
+            <th className="py-3 pr-4 font-semibold">Structure</th>
+            <th className="py-3 pr-4 font-semibold">Impact</th>
+            <th className="py-3 pr-4 font-semibold">Matched</th>
+            <th className="py-3 pr-4 font-semibold">Missing</th>
+            <th className="py-3 font-semibold">Changes</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-ink">
+          {reports.map((r) => (
+            <tr key={r._id}>
+              <td className="py-3 pr-4 whitespace-nowrap text-muted">
+                <time dateTime={r.createdAt}>{new Date(r.createdAt).toLocaleString()}</time>
+              </td>
+              <td className="py-3 pr-4 font-display text-xl font-bold text-accent-ink">{r.overallScore}</td>
+              <td className="py-3 pr-4">{r.breakdown.match}</td>
+              <td className="py-3 pr-4">{r.breakdown.structure}</td>
+              <td className="py-3 pr-4">{r.breakdown.impact}</td>
+              <td className="py-3 pr-4">{r.matchedTerms.length}</td>
+              <td className="py-3 pr-4">{r.missingTerms.length}</td>
+              <td className="py-3">{r.weaknesses.length}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }

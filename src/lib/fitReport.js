@@ -10,13 +10,14 @@ export async function fetchFitHistory() {
 }
 
 // Ask the Express server for a written fit report. The server holds the labd key;
-// the browser only sends the resume text and job description.
+// the browser sends the resume text, the job description and the scorecard, which the
+// server saves for the history list.
 // Resolves to { report, percentLeft }; throws an Error with a readable message otherwise.
-export async function requestFitReport(resumeText, jobDescription) {
+export async function requestFitReport(resumeText, jobDescription, scores) {
   const res = await fetch("/api/fit-report", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ resume: resumeText, jobDescription }),
+    body: JSON.stringify({ resume: resumeText, jobDescription, scores }),
   });
 
   const data = await res.json().catch(() => ({}));
